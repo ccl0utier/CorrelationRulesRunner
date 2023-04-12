@@ -5,6 +5,10 @@
 **Correlation Rules Runner** is a utility script that can run all or selected/filtered Splunk Enterprise Security correlation rules to see if they return hits.
 It will save run results into a KV Store collection which can then be optionally scheduled in Enterprise Security using the same command.
 
+## Requirements
+
+The script uses 
+
 ## Syntax
 
 ```
