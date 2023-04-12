@@ -1,2 +1,2 @@
-blessings=1.7
-splunk-sdk=1.7.3
+splunk-sdk==1.7.3
+blessings>=1.7
