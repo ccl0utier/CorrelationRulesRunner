@@ -13,6 +13,8 @@ Both can be installed by using:
 pip install -r requirements.txt
 ```
 
+Have a look at the link provided above for additional configuration details that might be required for the Splunk Python SDK.
+
 ## Syntax
 
 ```commandline
