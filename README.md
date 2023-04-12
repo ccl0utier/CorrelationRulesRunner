@@ -7,11 +7,15 @@ It will save run results into a KV Store collection which can then be optionally
 
 ## Requirements
 
-The script uses 
+The script uses the Splunk Python SDK (`splunk-sdk`) as well as the Blessings (`blessings`) library.
+Both can be installed by using: 
+```commandline
+pip install -r requirements.txt
+```
 
 ## Syntax
 
-```
+```commandline
 usage: cr_runner.py [options]...
 
 Runs all or selected ES Correlation Searches and report which ones have hits. Saves results in a KV Store lookup named "detection_status_collection".
