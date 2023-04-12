@@ -66,6 +66,10 @@ Connect to a named Splunk server and run all detections matching MITRE technique
 
 `cr_runner.py -s mysplunkserver.local -te T1003.001,T1059.003,T1038 -f`
 
+Here's an example run:
+
+![example_run](https://user-images.githubusercontent.com/58239192/231543311-0792e201-9c24-4876-b2bb-aadc29beea0c.gif)
+
 ## Notes & Feedback
 
 If you have feedback on this utility script for Splunk ES (improvement ideas, issues, questions), feel free to contact me via email or open an issue on this project on GitHub.
