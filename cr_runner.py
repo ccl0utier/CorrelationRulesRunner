@@ -8,12 +8,12 @@
 # Results are saved in the "detection_status_collection" KV Store lookup.
 #
 import argparse
+import getpass
 import json
+import re
+import signal
 import sys
 import time
-import getpass
-import signal
-import re
 from time import sleep
 
 import splunklib.client as client
@@ -61,6 +61,10 @@ def init_argparse() -> argparse.ArgumentParser:
     parser.add_argument(
         "-t", "--token", action="store",
         help="Splunk bearer token to use for the connection"
+    )
+    parser.add_argument(
+        "-n", "--name", action="store",
+        help="Only execute the correlation search matching this name. Takes precedence over any other filter."
     )
     parser.add_argument(
         "-te", "--mitre-technique", action="store",
@@ -134,10 +138,12 @@ def validate_techniques(args_techniques) -> None:
 def get_es_detections(args, service):
     # Check for specific filter and prepare an appropriate SPL filter accordingly.
     es_filter = ""
+    if args.name is not None:
+        es_filter = f"| search csearch_name = \"{args.name}\""
     if args.enabled_detections_only:
-        es_filter = "| search isEnabled = True"
+        es_filter += "| search disabled = 0"
     if args.disabled_detections_only:
-        es_filter = "| search isEnabled = False"
+        es_filter += "| search disabled = 1"
     if args.mitre_technique is not None:
         if "," in args.mitre_technique:
             techniques = args.mitre_technique.upper().replace(" ", "")
@@ -148,11 +154,11 @@ def get_es_detections(args, service):
     detection_search: str = """
   | rest splunk_server=local count=0 /services/saved/searches 
   | where isnotnull('action.correlationsearch.enabled') 
-  | eval isEnabled=if(disabled == 0, "True", "False")
   | rename title as csearch_name, dispatch.earliest_time as earliest_time, dispatch.latest_time as latest_time, 
            action.notable.param.security_domain as security_domain, action.correlationsearch.annotations as annotations
   | spath output=mitre_attack_technique input=annotations path="mitre_attack{}"
-  | table csearch_name, isEnabled, security_domain, mitre_attack_technique, earliest_time, latest_time, search
+  | table csearch_name, disabled, security_domain, mitre_attack_technique, earliest_time, latest_time, search
+  | eval mitre_attack_technique = if(isnull(mitre_attack_technique), "", mitre_attack_technique)
   """
     detection_search += f"{es_filter}"
 
@@ -189,7 +195,7 @@ def get_detection_status_collection(args, service):
         transforms = service.confs['transforms']
         transforms.create(name=transform_name,
                           **{'external_type': 'kvstore', 'collection': collection_name,
-                             'fields_list': '_key, name, results, updated, earliest, latest, search',
+                             'fields_list': '_key, name, results, disabled, updated, earliest, latest, techniques, search',
                              'owner': 'nobody'})
 
     return service.kvstore[collection_name]
@@ -204,10 +210,11 @@ def exists_in_collection(collection, query) -> bool:
     else:
         return False
 
+
 ###
 # Remove entry if it exists in the KV Store collection.
 ###
-def remove_from_collection(collection, query):
+def remove_from_collection(collection, query) -> None:
     entries = collection.data.query(query=query)
     if len(entries) > 0:
         collection.data.delete(json.dumps({"_key": entries[0]['_key']}))
@@ -219,12 +226,20 @@ def remove_from_collection(collection, query):
 ###
 def add_to_collection(collection, detection, result_count) -> None:
     collection.data.insert(json.dumps(
-        {"name": detection['csearch_name'], "results": str(int(result_count)), "updated": str(int(time.time())),
-         "earliest": normalize_time(detection['earliest_time']), "latest": normalize_time(detection['latest_time']),
-         "search": detection['search']}))
+        {"name": detection['csearch_name'],
+         "results": str(int(result_count)),
+         "disabled": str(int(detection['disabled'])),
+         "updated": str(int(time.time())),
+         "earliest": normalize_time(detection['earliest_time']),
+         "latest": normalize_time(detection['latest_time']),
+         "techniques": detection['mitre_attack_technique'],
+         "search": detection['search']
+         }
+        )
+    )
 
 
-def validate_search(args, service, search):
+def validate_search(args, service, search) -> bool:
     try:
         service.parse(search, parse_only=True)
         return True
@@ -255,13 +270,14 @@ def run_search(args, service, search, earliest, latest, t) -> int:
             while not job.is_ready():
                 pass
             stats = {"isDone": job["isDone"],
+                     "dispatchState": job["dispatchState"],
                      "doneProgress": float(job["doneProgress"]) * 100,
                      "scanCount": int(job["scanCount"]),
                      "eventCount": int(job["eventCount"]),
                      "resultCount": int(job["resultCount"])}
 
             status = ("\r%(doneProgress)03.1f%%   %(scanCount)d scanned   "
-                      "%(eventCount)d matched   %(resultCount)d results") % stats
+                      "%(eventCount)d matched   %(resultCount)d results   -   %(dispatchState)s") % stats
 
             # Display current search progress at the bottom of the terminal window.
             with t.location(0, t.height - 1):
@@ -319,7 +335,7 @@ def log_error(e) -> None:
 ###
 def log_verbose(e) -> None:
     t = Terminal()
-    print(f"{t.bold_green}INFO: {e}{t.normal}")
+    print(f"{t.bold_green}\nINFO: {e}{t.normal}")
 
 
 ###
@@ -335,21 +351,23 @@ def sigint_handler():
 # Get a friendly description of the security detection filter.
 ###
 def get_filter_description(args) -> str:
+    if args.name is not None:
+        return f"{args.name}"
     if args.enabled_detections_only:
-        return "Enabled"
+        return "list of Enabled"
     if args.disabled_detections_only:
-        return "Disabled"
+        return "list of Disabled"
     if args.mitre_technique:
-        return "selected MITRE ATT&CK Techniques"
+        return "list of selected MITRE ATT&CK Techniques"
     return "All"
 
 
 ###
 # List results that have already been gathered from the KV Store collection.
 ###
-def list_results(collection, t):
-    print(f"{t.bold}\nDetections results in collection:{t.normal}")
-    query = json.dumps({"results": {"$gt": "0"}})
+def list_results(collection, args, t):
+    print(f"{t.bold}\nResults for {get_filter_description(args)} detection(s) in collection:{t.normal}")
+    query = json.dumps(get_collection_filter(args))
     query_results = collection.data.query(query=query)
     if len(query_results) > 0:
         print(
@@ -359,6 +377,34 @@ def list_results(collection, t):
             print(f"{t.yellow}{result['name']:<115}{result['results']:<5}{t.normal}")
     else:
         print(f"{t.yellow}None{t.normal}")
+
+###
+# Build KVStore query for requested MITRE techniques.
+###
+def get_query_for_techniques(mitre_techniques) -> str:
+    if mitre_techniques is None:
+        pass
+    query = { "$or": []}
+    for mitre_technique in mitre_techniques.replace(" ", "").split(","):
+        query["$or"].append({"techniques": mitre_technique})
+
+    return query
+
+
+###
+# Filter collection results based on command arguments.
+###
+def get_collection_filter(args) -> dict:
+    if args.name:
+        return {"name": args.name}
+    if args.enabled_detections_only:
+        return {"disabled": {"$lte": "0"}}
+    if args.disabled_detections_only:
+        return {"disabled": {"$gte": "1"}}
+    if args.mitre_technique:
+        return get_query_for_techniques(args.mitre_technique)
+
+    return {"results": {"$gt": "0"}}
 
 
 ###
@@ -402,7 +448,7 @@ def schedule_detection(saved_searches, result, t):
 # Execute all detections and gather results
 ###
 def execute_detections(args, service, collection, t):
-    print(f"{t.bold}Getting list of {get_filter_description(args)} ES Security Detections... {t.normal}", end='',
+    print(f"{t.bold}Getting {get_filter_description(args)} ES Security Detection(s)... {t.normal}", end='',
           flush=True)
 
     total, detections = get_es_detections(args, service)
@@ -490,10 +536,11 @@ def main():
     try:
         service = connect(args)
     except ConnectionRefusedError:
-        log_error(f"Could not connect to {args.server} on tcp/{args.port}. Check the Splunk server is running and accessible on that port.")
+        log_error(
+            f"Could not connect to {args.server} on tcp/{args.port}. Check the Splunk server is running and accessible on that port.")
         sys.exit(1)
 
-    print(f"{t.bold}Getting status of ES Security Detections (KVStore)... {t.normal}", end='', flush=True)
+    print(f"{t.bold}Getting status of previous ES Security Detections executions (KVStore)... {t.normal}", end='', flush=True)
     collection = get_detection_status_collection(args, service)
     print(f"{t.bold_green}{len(collection.data.query())} results read.{t.normal}")
     sleep(1)
@@ -504,7 +551,7 @@ def main():
         print(f"{t.bold_green}done.{t.normal}")
 
     if args.list:
-        list_results(collection, t)
+        list_results(collection, args, t)
     else:
         if args.schedule:
             schedule_detections(service, collection, t)
