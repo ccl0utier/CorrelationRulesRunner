@@ -487,7 +487,11 @@ def main():
     additional_args_validation(args)
 
     t = Terminal()
-    service = connect(args)
+    try:
+        service = connect(args)
+    except ConnectionRefusedError:
+        log_error(f"Could not connect to {args.server} on tcp/{args.port}. Check the Splunk server is running and accessible on that port.")
+        sys.exit(1)
 
     print(f"{t.bold}Getting status of ES Security Detections (KVStore)... {t.normal}", end='', flush=True)
     collection = get_detection_status_collection(args, service)

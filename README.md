@@ -7,6 +7,9 @@ It will save run results into a KV Store collection which can then be optionally
 
 ## Requirements
 
+- Python 3.x
+- Python `pip` or another way to install dependencies
+
 The script uses the [Splunk Python SDK](https://dev.splunk.com/enterprise/docs/devtools/python/sdk-python/gettingstartedpython/installsdkpython/) (`splunk-sdk`) as well as the [Blessings](https://github.com/erikrose/blessings) (`blessings`) library.
 Both can be installed by using: 
 ```commandline
