@@ -89,6 +89,8 @@ Here's an example run:
 The results are stored in a KV store collection named `detection_status_collection` with a corresponding transform named `detection_status_collection_lookup`. 
 Both get created in the `system` app context and are shared globally.
 
+![image](https://user-images.githubusercontent.com/58239192/232083793-38503177-5e2d-4148-ad93-de568939e6d9.png)
+
 ## Notes & Feedback
 
 If you have feedback on this utility script for Splunk ES (improvement ideas, issues, questions), feel free to contact me via email or open an issue on this project on GitHub.
