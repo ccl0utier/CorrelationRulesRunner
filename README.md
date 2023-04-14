@@ -9,6 +9,7 @@ It will save run results into a KV Store collection which can then be optionally
 
 - Python 3.x
 - Python `pip` or another way to install dependencies
+- Splunk Enterprise Security
 
 The script uses the [Splunk Python SDK](https://dev.splunk.com/enterprise/docs/devtools/python/sdk-python/gettingstartedpython/installsdkpython/) (`splunk-sdk`) as well as the [Blessings](https://github.com/erikrose/blessings) (`blessings`) library.
 Both can be installed by using: 
@@ -82,6 +83,11 @@ Connect to a named Splunk server and run all detections matching MITRE technique
 Here's an example run:
 
 ![example_run](https://user-images.githubusercontent.com/58239192/231543311-0792e201-9c24-4876-b2bb-aadc29beea0c.gif)
+
+## Lookup
+
+The results are stored in a KV store collection named `detection_status_collection` with a corresponding transform named `detection_status_collection_lookup`. 
+Both get created in the `system` app context and are shared globally.
 
 ## Notes & Feedback
 
