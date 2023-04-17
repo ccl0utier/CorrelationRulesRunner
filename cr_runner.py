@@ -67,6 +67,11 @@ def init_argparse() -> argparse.ArgumentParser:
         help="Only execute the correlation search matching this name. Takes precedence over any other filter."
     )
     parser.add_argument(
+        "-cf", "--custom-filter", action="store",
+        help="Used with -l or -sc, to apply a custom filter to the collection of results to list/schedule. See syntax and details here: https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTkvstore#Queries.",
+        default=False
+    )
+    parser.add_argument(
         "-te", "--mitre-technique", action="store",
         help="One or more MITRE ATT&CK technique(s) to use in filtering correlation searches to execute. "
              "Separate multiple values with commas"
@@ -353,6 +358,8 @@ def sigint_handler():
 def get_filter_description(args) -> str:
     if args.name is not None:
         return f"{args.name}"
+    if args.custom_filter:
+        return "custom filter"
     if args.enabled_detections_only:
         return "list of Enabled"
     if args.disabled_detections_only:
@@ -398,6 +405,8 @@ def get_query_for_techniques(mitre_techniques) -> dict:
 def get_collection_filter(args) -> dict:
     if args.name:
         return {"name": args.name}
+    if args.custom_filter:
+        return json.loads(args.custom_filter)
     if args.enabled_detections_only:
         return {"disabled": {"$lte": "0"}}
     if args.disabled_detections_only:
