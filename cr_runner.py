@@ -68,7 +68,11 @@ def init_argparse() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-cf", "--custom-filter", action="store",
-        help="Used with -l or -sc, to apply a custom filter to the collection of results to list/schedule. See syntax and details here: https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTkvstore#Queries.",
+        help="Used with -l or -sc, to apply a custom filter to the collection of results to list/schedule. See syntax and details here: https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTkvstore#Queries."
+    )
+    parser.add_argument(
+        "-nh", "--include-no-hits", action="store_true",
+        help="When used with -l or -sc to list/schedule detections, return all matching results (as opposed to only those with 'hits').",
         default=False
     )
     parser.add_argument(
@@ -403,18 +407,23 @@ def get_query_for_techniques(mitre_techniques) -> dict:
 # Filter collection results based on command arguments.
 ###
 def get_collection_filter(args) -> dict:
-    if args.name:
-        return {"name": args.name}
-    if args.custom_filter:
-        return json.loads(args.custom_filter)
-    if args.enabled_detections_only:
-        return {"disabled": {"$lte": "0"}}
-    if args.disabled_detections_only:
-        return {"disabled": {"$gte": "1"}}
-    if args.mitre_technique:
-        return get_query_for_techniques(args.mitre_technique)
+    filter = {"$and": []}
 
-    return {"results": {"$gt": "0"}}  # Return everything that had hits.
+    if args.name:
+        filter["$and"].append({"name": args.name})
+    if args.custom_filter:
+        filter["$and"].append(json.loads(args.custom_filter))
+    if args.enabled_detections_only:
+        filter["$and"].append({"disabled": {"$lte": "0"}})
+    if args.disabled_detections_only:
+        filter["$and"].append({"disabled": {"$gte": "1"}})
+    if args.mitre_technique:
+        filter["$and"].append(get_query_for_techniques(args.mitre_technique))
+
+    if not args.include_no_hits:
+        filter["$and"].append({"results": {"$gt": "0"}})  # Return only results that had hits.
+
+    return filter
 
 
 ###
