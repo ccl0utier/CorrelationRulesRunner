@@ -96,9 +96,13 @@ Connect to a named Splunk server and run all detections matching MITRE technique
 
 `cr_runner.py -s mysplunkserver.local -te T1003.001,T1059.003,T1038 -f`
 
-Connect to a named Splunk server and schedule the search named "Access - Default Accounts At Rest - Rule".
+Connect to a named Splunk server and schedule the search named "Access - Default Accounts At Rest - Rule":
 
 `cr_runner.py -s mysplunkserver.local -n "Access - Default Accounts At Rest - Rule" -sc`
+
+Connect to a named Splunk server and schedule all currently inactive searches that returned "hits":
+
+`cr_runner.py -s mysplunkserver.local -dd -sc`
 
 Here's an example run:
 
