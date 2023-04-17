@@ -6,6 +6,8 @@
 
 Run results are then saved into a KV Store collection and those results can be used to selectively schedule selected searches in Enterprise Security using the same command.  For example, by scheduling all searches that returned hits... or all searches mapped to a particular MITRE ATT&CK technique, etc.
 
+**Note:** Any correlation rule that cannot be run because an error (e.g.: Invalid syntax) will be listed with a value of `-1` for `results` in the KV Store collection. That makes it easy to find incorrect rules to correct them later.
+
 ## Requirements
 
 - Python 3.x
@@ -70,9 +72,17 @@ Connect to a Splunk server named `mysplunkserver.local` using an authentication 
 
 `cr_runner.py -s mysplunkserver.local -t eyJraWQiOiJzcGx...xTqHKsVC9Ir3mf70w0BjrzKCi49sw`
 
-Connect to a named Splunk server and list previous run results:
+Connect to a named Splunk server and list previous run results with "hits":
 
 `cr_runner.py -s mysplunkserver.local -l`
+
+Connect to a named Splunk server and list previous run results with "hits", but only for non-enabled detections:
+
+`cr_runner.py -s mysplunkserver.local -dd -l`
+
+Connect to a named Splunk server and list previous run results with "hits", but only for detections matching a customer filter (in this case listing only detections that failed to run properly):
+
+`cr_runner.py -s mysplunkserver.local -cf "{ \"results\": \"-1\" }" -l`
 
 Reset the previous run(s) results in the KV store:
 
