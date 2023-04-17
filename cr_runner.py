@@ -378,13 +378,14 @@ def list_results(collection, args, t):
     else:
         print(f"{t.yellow}None{t.normal}")
 
+
 ###
 # Build KVStore query for requested MITRE techniques.
 ###
-def get_query_for_techniques(mitre_techniques) -> str:
+def get_query_for_techniques(mitre_techniques) -> dict:
     if mitre_techniques is None:
         pass
-    query = { "$or": []}
+    query = {"$or": []}
     for mitre_technique in mitre_techniques.replace(" ", "").split(","):
         query["$or"].append({"techniques": mitre_technique})
 
@@ -404,18 +405,19 @@ def get_collection_filter(args) -> dict:
     if args.mitre_technique:
         return get_query_for_techniques(args.mitre_technique)
 
-    return {"results": {"$gt": "0"}} # Return everything that had hits.
+    return {"results": {"$gt": "0"}}  # Return everything that had hits.
 
 
 ###
 # Schedule all detections that were previously tested and shown to return at least one result.
 ###
-def schedule_detections(service, collection, t):
-    query = json.dumps({"results": {"$gt": "0"}})
+def schedule_detections(args, service, collection, t):
+    print(f"{t.bold}\nScheduling {get_filter_description(args)} detection(s) in collection:{t.normal}")
+    query = json.dumps(get_collection_filter(args))
     query_results = collection.data.query(query=query)
     results_count = len(query_results)
     if results_count > 0:
-        print(f"{t.bold}Scheduling {results_count} detections in collection...{t.normal}")
+        print(f"{t.bold}{results_count} detection(s) in collection to schedule...{t.normal}")
         saved_searches = service.saved_searches
         for result in query_results:
             schedule_detection(saved_searches, result, t)
@@ -432,7 +434,7 @@ def schedule_detection(saved_searches, result, t):
           flush=True)
     if search_name in saved_searches:
         search = saved_searches[search_name]
-        if bool(search["disabled"]) or not bool(search["is_scheduled"]):
+        if search["disabled"] == '1' or search["is_scheduled"] != '1':
             kwargs = {
                 "is_scheduled": True,
                 "disabled": False
@@ -440,7 +442,7 @@ def schedule_detection(saved_searches, result, t):
             search.update(**kwargs).refresh()
             print(f"{t.bold_green}done.{t.normal} Next run: {search['next_scheduled_time']}.")
         else:
-            print(f"{t.bold_green}already scheduled.{t.normal}")
+            print(f"{t.bold_yellow}already scheduled.{t.normal}")
         sys.exit(0)
 
 
@@ -554,7 +556,7 @@ def main():
         list_results(collection, args, t)
     else:
         if args.schedule:
-            schedule_detections(service, collection, t)
+            schedule_detections(args, service, collection, t)
         else:
             execute_detections(args, service, collection, t)
 
