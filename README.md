@@ -38,6 +38,11 @@ optional arguments:
   -f, --force           Force execution of correlation searches, even if previous results exist
   -t TOKEN, --token TOKEN
                         Splunk bearer token to use for the connection
+  -n NAME, --name NAME  Only execute the correlation search matching this name. Takes precedence over any other filter.
+  -cf CUSTOM_FILTER, --custom-filter CUSTOM_FILTER
+                        Used with -l or -sc, to apply a custom filter to the collection of results to list/schedule. See syntax and details here: https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTkvstore#Queries.
+  -nh, --include-no-hits
+                        When used with -l or -sc to list/schedule detections, return all matching results (as opposed to only those with 'hits').
   -te MITRE_TECHNIQUE, --mitre-technique MITRE_TECHNIQUE
                         One or more MITRE ATT&CK technique(s) to use in filtering correlation searches to execute. Separate multiple values with commas
   -l, --list            Do not execute correlation searches, simply list previous results (if any)
