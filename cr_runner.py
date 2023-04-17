@@ -404,7 +404,7 @@ def get_collection_filter(args) -> dict:
     if args.mitre_technique:
         return get_query_for_techniques(args.mitre_technique)
 
-    return {"results": {"$gt": "0"}}
+    return {"results": {"$gt": "0"}} # Return everything that had hits.
 
 
 ###
