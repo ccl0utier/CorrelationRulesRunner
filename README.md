@@ -106,7 +106,7 @@ Connect to a named Splunk server and schedule all currently inactive searches th
 
 Here's an example run:
 
-![example_run](https://user-images.githubusercontent.com/58239192/231543311-0792e201-9c24-4876-b2bb-aadc29beea0c.gif)
+![correlationrulesrunner](https://user-images.githubusercontent.com/58239192/232607480-7d54ee39-021f-4995-9df3-a1768e420da4.gif)
 
 ## Lookup
 
