@@ -70,7 +70,7 @@ Connect to the Splunk server on localhost, using the admin user, asking for a pa
 
 Connect to Splunk server named `mysplunkserver.local` using the default user ("admin") and password (user will be prompted) and run all correlation rules:
 
-`cr_runner.py -s splunk-sh.localdomain`
+`cr_runner.py -s mysplunkserver.local`
 
 Connect to a Splunk server named `mysplunkserver.local` using an authentication token and run all correlation rules:
 
