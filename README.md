@@ -50,12 +50,12 @@ optional arguments:
   -l, --list            Do not execute correlation searches, simply list previous results (if any)
   -sc, --schedule       Do not execute correlation searches, simply schedule previous results (if any)
   -ed, --enabled-detections-only
-                        Only execute correlation searches that are enabled
+                        Only list/execute/schedule correlation searches that are enabled
   -dd, --disabled-detections-only
-                        Only execute correlation searches that are disabled
+                        Only list/execute/schedule correlation searches that are disabled
   -r, --reset           Reset the results collection (forces to re-run all detections)
   -v, --verbose         Display verbose messages about the script execution.
-  --version             show program's version number and exit
+  --version             Show version number and exit
 ```
 
 ## Authentication
