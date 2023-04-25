@@ -58,6 +58,10 @@ optional arguments:
   --version             show program's version number and exit
 ```
 
+## Authentication
+
+You can setup Authentication tokens in Splunk (see documentation [here](https://docs.splunk.com/Documentation/Splunk/latest/Security/Setupauthenticationwithtokens)) and then use that to connect using the `-t TOKEN, --token TOKEN` option, which is the preferred method.
+
 ## Examples
 
 Connect to the Splunk server on localhost, using the admin user, asking for a password (prompt) and run all correlations:
