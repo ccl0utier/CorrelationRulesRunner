@@ -60,7 +60,7 @@ def init_argparse() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-t", "--token", action="store",
-        help="Splunk bearer token to use for the connection"
+        help="Splunk auth token to use for the connection"
     )
     parser.add_argument(
         "-n", "--name", action="store",
@@ -90,11 +90,11 @@ def init_argparse() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "-ed", "--enabled-detections-only", action="store_true",
-        help="Only execute correlation searches that are enabled"
+        help="Only list/execute/schedule correlation searches that are enabled"
     )
     parser.add_argument(
         "-dd", "--disabled-detections-only", action="store_true",
-        help="Only execute correlation searches that are disabled"
+        help="Only list/execute/schedule correlation searches that are disabled"
     )
     parser.add_argument(
         "-r", "--reset", action="store_true",

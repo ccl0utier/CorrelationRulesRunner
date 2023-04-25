@@ -39,7 +39,7 @@ optional arguments:
                         Splunk user password to use for the connection. If a user is supplied but no password is, it will be asked from the command line
   -f, --force           Force execution of correlation searches, even if previous results exist
   -t TOKEN, --token TOKEN
-                        Splunk bearer token to use for the connection
+                        Splunk auth token to use for the connection
   -n NAME, --name NAME  Only execute the correlation search matching this name. Takes precedence over any other filter.
   -cf CUSTOM_FILTER, --custom-filter CUSTOM_FILTER
                         Used with -l or -sc, to apply a custom filter to the collection of results to list/schedule. See syntax and details here: https://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTkvstore#Queries.
